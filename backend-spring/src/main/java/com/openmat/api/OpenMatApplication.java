@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class BackendSpringApplication {
+public class OpenMatApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(BackendSpringApplication.class, args);
+		SpringApplication.run(OpenMatApplication.class, args);
 	}
 
 }
