@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: openmat-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: open_mat
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+      TZ: Asia/Seoul
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d open_mat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - openmat-network
+
+  spring-boot:
+    build:
+      context: ./backend-spring
+      dockerfile: Dockerfile
+    container_name: openmat-spring
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: open_mat
+      SERVER_PORT: 8080
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - openmat-network
+    restart: unless-stopped
+
+  golang:
+    build:
+      context: ./backend-golang
+      dockerfile: Dockerfile
+    container_name: openmat-golang
+    ports:
+      - "8081:8081"
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: open_mat
+      PORT: 8081
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - openmat-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: openmat-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - spring-boot
+      - golang
+    networks:
+      - openmat-network
+    restart: unless-stopped
+
+networks:
+  openmat-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
