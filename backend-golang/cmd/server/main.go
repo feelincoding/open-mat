@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/feelincoding/backend-golang/open-mat/internal/config"
-	"github.com/feelincoding/backend-golang/open-mat/internal/database"
+	"github.com/feelincoding/open-mat/backend-golang/internal/config"
+	"github.com/feelincoding/open-mat/backend-golang/internal/database"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
